@@ -39,7 +39,7 @@ The project requires the following Python libraries:
 
 1.  **Clone the repository:**
     ```bash
-    git clone <repository-url>
+    git clone git@github.com:Andry030/Iris-Flower-Classification-using-Decision-Tree-with-Python.git
     cd ClassificationIrisPython
     ```
 
