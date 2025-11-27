@@ -14,10 +14,10 @@ import model as iris_model
 app = FastAPI()
 
 class IrisInput(BaseModel):
-    sepal_length: float
-    sepal_width: float
-    petal_length: float
-    petal_width: float
+    sepal_length: float = 5.1  # valeur par défaut
+    sepal_width: float = 3.5   # valeur par défaut
+    petal_length: float = 1.4  # valeur par défaut
+    petal_width: float = 0.2   # valeur par défaut
 
 @app.get("/")
 def read_root():
@@ -41,6 +41,18 @@ def read_root():
                     {"name": "petal_width", "type": "float", "required": True}
                 ]
             },
+            {
+                "url": "/iris_model/save",
+                "method": "POST",
+                "description": "Save a new Iris sample to the dataset",
+                "parameters": [
+                    {"name": "sepal_length", "type": "float", "required": True},
+                    {"name": "sepal_width", "type": "float", "required": True},
+                    {"name": "petal_length", "type": "float", "required": True},
+                    {"name": "petal_width", "type": "float", "required": True},
+                    {"name": "iris_class", "type": "string", "required": True}
+                ]
+            }
         ]
     }
 
@@ -54,10 +66,13 @@ def get_accuracy():
 @app.post("/iris_model/predict")
 def predict_iris(data: IrisInput):
     try:
-
-        if not (0 < data.sepal_length < 10 and 0 < data.sepal_width < 10 and 0 < data.petal_length < 10 and 0 < data.petal_width < 10):
+        if not (0 < data.sepal_length < 10 and
+                0 < data.sepal_width < 10 and
+                0 < data.petal_length < 10 and
+                0 < data.petal_width < 10):
             raise ValueError("Values out of expected range (0–10 cm).")
         
+        # Prédiction avec probabilités
         prediction, probabilities = iris_model.predict_iris_with_proba(
             data.sepal_length,
             data.sepal_width,
@@ -65,16 +80,19 @@ def predict_iris(data: IrisInput):
             data.petal_width
         )
         
+        # Ajouter % aux probabilités
+        probabilities_percent = {cls: f"{prob:.2f}%" for cls, prob in probabilities.items()}
+        
         return {
             "prediction": prediction,
-            "probabilities": probabilities
+            "probabilities": probabilities_percent
         }
     
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
     
 # Save new sample to dataset
 @app.post("/iris_model/save")
