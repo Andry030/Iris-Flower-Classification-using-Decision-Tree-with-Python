@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iris Decision-Tree Classifier</title>
+
+    <!-- Tailwind + Font-Awesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+    <style>
+        :root {
+            --bg-start: #f0f4ff;
+            --bg-end: #e0e7ff;
+            --accent: #6366f1;
+            --accent-dark: #4f46e5;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-start: #0f172a;
+                --bg-end: #1e293b;
+                --accent: #818cf8;
+                --accent-dark: #6366f1;
+            }
+        }
+        body {
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+        }
+        .modal-bg { backdrop-filter: blur(12px); transition: opacity .3s ease; }
+        .modal-panel { animation: slideIn .4s cubic-bezier(.16,1,.3,1); }
+        @keyframes slideIn {
+            from { transform: translateY(40px) scale(.95); opacity: 0 }
+            to   { transform: translateY(0)   scale(1);  opacity: 1 }
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 1.25rem; height: 1.25rem;
+            background: var(--accent);
+            border-radius: 50%;
+            transition: transform .2s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); background: var(--accent-dark); }
+
+        /* ------ CUSTOM TOAST ------ */
+        #toastContainer{position:fixed;top:1rem;right:1rem;z-index:60;display:flex;flex-direction:column;gap:.5rem;}
+        .toast{padding:.75rem 1.25rem;border-radius:.75rem;color:#fff;font-size:.875rem;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:toastIn .4s ease;}
+        @keyframes toastIn{from{transform:translateX(100%);}to{transform:translateX(0);}}
+        .toast-info{background:linear-gradient(135deg,#3b82f6,#1d4ed8);}
+        .toast-success{background:linear-gradient(135deg,#22c55e,#16a34a);}
+        .toast-error{background:linear-gradient(135deg,#ef4444,#dc2626);}
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 dark:text-slate-200">
+
+    <!-- 1. HERO BAR -->
+    <header class="w-full bg-white/60 dark:bg-slate-900/60 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-lg font-bold text-indigo-600 dark:text-indigo-400">Iris Decision-Tree Classifier</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Exam AI – L2 Genie Logiciel – ISTA Ambositra |
+                    <span class="font-semibold">ANDRIANAIVO Noé</span>
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- HISTORY -->
+                <button id="historyBtn" class="text-sm flex items-center gap-2 px-3 py-1.5 rounded-full
+                                         bg-slate-100 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300
+                                         hover:bg-slate-200 dark:hover:bg-slate-900/70 transition relative">
+                    <i class="fa fa-clock-rotate-left"></i> History
+                    <span id="histBadge" class="absolute -top-1 -right-1 px-2 py-0.5 text-xs rounded-full bg-indigo-500 text-white hidden">0</span>
+                </button>
+                <!-- API INFO -->
+                <button id="infoBtn" class="text-sm flex items-center gap-2 px-3 py-1.5 rounded-full
+                                         bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300
+                                         hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition">
+                    <i class="fa fa-circle-info"></i> API Info
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2. MAIN ACTION -->
+    <main class="max-w-5xl mx-auto px-6 py-10 grid place-items-center">
+        <div class="text-center space-y-6">
+            <div class="text-5xl text-indigo-500 dark:text-indigo-400"><i class="fa-solid fa-leaf"></i></div>
+            <h2 class="text-2xl font-bold">Classify an Iris flower in one click</h2>
+            <p class="text-slate-600 dark:text-slate-300 max-w-md mx-auto">
+                Enter sepal & petal measurements and let the Decision-Tree model tell you
+                whether it is <span class="font-semibold text-pink-500">Setosa</span>,
+                <span class="font-semibold text-purple-500">Versicolor</span> or
+                <span class="font-semibold text-blue-500">Virginica</span>.
+            </p>
+            <button id="openModal" class="group inline-flex items-center gap-3 px-6 py-3 rounded-full
+                           bg-gradient-to-br from-indigo-500 to-purple-600 text-white
+                           shadow-lg hover:shadow-indigo-400/40 transition-all duration-300">
+                <i class="fa fa-rocket"></i>
+                <span>Launch classifier</span>
+                <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- 3. MODAL – CLASSIFIER -->
+    <div id="modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-bg absolute inset-0 bg-black/30"></div>
+        <div class="relative min-h-screen grid place-items-center p-4">
+            <div class="modal-panel w-full max-w-2xl bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-2xl ring-1 ring-slate-200/20">
+                <div class="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
+                    <h3 class="text-lg font-bold">Iris measurements</h3>
+                    <button id="closeModal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><i class="fa-solid fa-xmark fa-xl"></i></button>
+                </div>
+                <div class="p-6 grid md:grid-cols-2 gap-6">
+                    <div class="space-y-5">
+                        <slider-group label="Sepal Length" id="sepal-length" min="4" max="8" step="0.1" value="5.1"></slider-group>
+                        <slider-group label="Sepal Width"  id="sepal-width"  min="2" max="5" step="0.1" value="3.5"></slider-group>
+                        <slider-group label="Petal Length" id="petal-length" min="1" max="7" step="0.1" value="1.4"></slider-group>
+                        <slider-group label="Petal Width"  id="petal-width"  min="0.1" max="3" step="0.1" value="0.2"></slider-group>
+                    </div>
+                    <div class="flex flex-col justify-between">
+                        <div class="text-sm space-y-2">
+                            <p class="flex items-center gap-2"><i class="fa-solid fa-circle-info text-indigo-500"></i>Drag sliders or type values.</p>
+                            <p class="flex items-center gap-2"><i class="fa-solid fa-server text-indigo-500"></i>API: <span id="apiStatus" class="font-semibold">checking…</span></p>
+                        </div>
+                        <button id="predictBtn" class="mt-4 w-full py-3 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-semibold shadow-md hover:shadow-indigo-400/40 transition-all">
+                            <i class="fa fa-sparkles mr-2"></i>Predict
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. RESULT POP-UP -->
+    <div id="resultPop" class="fixed bottom-8 right-8 z-50 hidden">
+        <div class="w-80 bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-2xl ring-1 ring-slate-200/20 p-5 modal-panel">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-lg">Prediction</h3>
+                <button id="closeResult" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="resultBody"></div>
+        </div>
+    </div>
+
+    <!-- 5. HISTORY POP-UP -->
+    <div id="historyPop" class="fixed inset-0 z-50 hidden">
+        <div class="modal-bg absolute inset-0 bg-black/30"></div>
+        <div class="relative min-h-screen grid place-items-center p-4">
+            <div class="modal-panel w-full max-w-2xl bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-2xl ring-1 ring-slate-200/20 p-6 max-h-[80vh] overflow-y-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold">Prediction History</h3>
+                    <div class="flex items-center gap-3">
+                        <button id="clearHistory" class="text-sm px-3 py-1.5 rounded-md bg-red-500 text-white hover:bg-red-600 transition">
+                            <i class="fa fa-trash mr-1"></i>Clear all
+                        </button>
+                        <button id="closeHistory" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark fa-xl"></i></button>
+                    </div>
+                </div>
+                <ul id="historyList" class="space-y-3"></ul>
+                <p id="emptyHistory" class="text-sm text-slate-500 dark:text-slate-400 text-center py-6">No predictions yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. INFO POP-UP -->
+    <div id="infoPop" class="fixed inset-0 z-50 hidden">
+        <div class="modal-bg absolute inset-0 bg-black/30"></div>
+        <div class="relative min-h-screen grid place-items-center p-4">
+            <div class="modal-panel w-full max-w-3xl bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-2xl ring-1 ring-slate-200/20 p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold">API Documentation</h3>
+                    <button id="closeInfo" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark fa-xl"></i></button>
+                </div>
+                <div class="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-sm">
+                    <p><strong>Author:</strong> ANDRIANAIVO Noé – L2 Genie Logiciel – ISTA Ambositra</p>
+                    <p><strong>Exam:</strong> AI – Iris Flower Classification Using Decision-Tree Algorithms</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                    <a href="https://github.com/Andry030/Iris-Flower-Classification-using-Decision-Tree-with-Python" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-900/50 hover:bg-slate-200 dark:hover:bg-slate-900/70 transition"><i class="fa-brands fa-github text-lg"></i><span>GitHub Repository</span></a>
+                    <a href="https://ocw.mit.edu/courses/15-097-prediction-machine-learning-and-statistics-spring-2012/resources/iris/" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-900/50 hover:bg-slate-200 dark:hover:bg-slate-900/70 transition"><i class="fa-solid fa-database text-lg"></i><span>Original MIT Dataset</span></a>
+                </div>
+                <div class="text-sm">
+                    <p class="font-semibold mb-2">Available endpoints</p>
+                    <ul class="space-y-2 list-disc pl-5">
+                        <li><code class="bg-slate-200 dark:bg-slate-900/50 px-1 rounded">GET /</code> – Welcome & meta-info</li>
+                        <li><code class="bg-slate-200 dark:bg-slate-900/50 px-1 rounded">GET /iris_model/accuracy</code> – Model accuracy</li>
+                        <li><code class="bg-slate-200 dark:bg-slate-900/50 px-1 rounded">POST /iris_model/predict</code> – Classify flower</li>
+                        <li><code class="bg-slate-200 dark:bg-slate-900/50 px-1 rounded">POST /iris_model/save</code> – Add new sample to dataset</li>
+                    </ul>
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700 pt-3">CORS is enabled – the page can talk to the API even when both run locally.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. WEB-COMPONENT -->
+    <template id="slider-group-template">
+        <div>
+            <label class="block text-sm font-semibold mb-1"></label>
+            <div class="flex items-center gap-3">
+                <input type="range" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                <input type="number" class="w-20 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700">
+            </div>
+        </div>
+    </template>
+
+    <!-- 8. TOAST CONTAINER -->
+    <div id="toastContainer"></div>
+
+    <script>
+        /* ---------- toast ---------- */
+        function toast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast toast-${type}`;
+            t.innerHTML = `<i class="fa fa-${type==='success'?'check':type==='error'?'exclamation':'info'}-circle mr-2"></i>${msg}`;
+            container.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
+        /* ---------- web-component ---------- */
+        class SliderGroup extends HTMLElement {
+            constructor() {
+                super();
+                const tpl = document.getElementById('slider-group-template').content.cloneNode(true);
+                this.appendChild(tpl);
+                const label = this.getAttribute('label');
+                const id    = this.getAttribute('id');
+                const min   = this.getAttribute('min');
+                const max   = this.getAttribute('max');
+                const step  = this.getAttribute('step');
+                const value = this.getAttribute('value');
+                this.querySelector('label').textContent = label;
+                const slider = this.querySelector('input[type=range]');
+                const number = this.querySelector('input[type=number]');
+                [slider, number].forEach(el => {
+                    el.id = id + (el.type === 'number' ? '-input' : '');
+                    el.min = min; el.max = max; el.step = step; el.value = value;
+                });
+                slider.addEventListener('input', e => number.value = e.target.value);
+                number.addEventListener('input', e => slider.value = e.target.value);
+            }
+        }
+        customElements.define('slider-group', SliderGroup);
+
+        /* ---------- modal ---------- */
+        const openBtn  = document.getElementById('openModal');
+        const closeBtn = document.getElementById('closeModal');
+        const modal    = document.getElementById('modal');
+        openBtn.onclick = () => modal.classList.remove('hidden');
+        closeBtn.onclick = () => modal.classList.add('hidden');
+
+        /* ---------- info ---------- */
+        const infoBtn   = document.getElementById('infoBtn');
+        const infoPop   = document.getElementById('infoPop');
+        const closeInfo = document.getElementById('closeInfo');
+        infoBtn.onclick = () => infoPop.classList.remove('hidden');
+        closeInfo.onclick = () => infoPop.classList.add('hidden');
+
+        /* ---------- history + localStorage ---------- */
+        const historyBtn   = document.getElementById('historyBtn');
+        const historyPop   = document.getElementById('historyPop');
+        const closeHistory = document.getElementById('closeHistory');
+        const clearHistoryBtn = document.getElementById('clearHistory');
+        const historyList  = document.getElementById('historyList');
+        const emptyHist    = document.getElementById('emptyHistory');
+        const histBadge    = document.getElementById('histBadge');
+        let history = JSON.parse(localStorage.getItem('irisHistory') || '[]');
+
+        historyBtn.onclick = () => {
+            renderHistory();
+            historyPop.classList.remove('hidden');
+        };
+        closeHistory.onclick = () => historyPop.classList.add('hidden');
+
+        clearHistoryBtn.onclick = () => {
+            if (confirm('Delete all history?')) {
+                history = [];
+                localStorage.removeItem('irisHistory');
+                renderHistory();
+                toast('History cleared', 'info');
+            }
+        };
+
+        function saveHistory() {
+            localStorage.setItem('irisHistory', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (!history.length) {
+                emptyHist.classList.remove('hidden');
+                historyList.innerHTML = '';
+                histBadge.classList.add('hidden');
+                return;
+            }
+            emptyHist.classList.add('hidden');
+            histBadge.textContent = history.length;
+            histBadge.classList.remove('hidden');
+            historyList.innerHTML = history.map((h, i) => `
+                <li class="flex items-center justify-between p-3 rounded-lg bg-slate-100 dark:bg-slate-900/50">
+                    <div class="flex-1">
+                        <div class="font-semibold">${h.prediction}</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400">
+                            SL:${h.data.sepal_length} SW:${h.data.sepal_width} PL:${h.data.petal_length} PW:${h.data.petal_width}
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">${h.date}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="loadHistory(${i})" class="text-sm px-2 py-1 rounded bg-indigo-500 text-white hover:bg-indigo-600 transition">
+                            <i class="fa fa-upload"></i>
+                        </button>
+                        <button onclick="deleteHistory(${i})" class="text-sm px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                </li>`).join('');
+        }
+
+        function deleteHistory(index) {
+            history.splice(index, 1);
+            saveHistory();
+            toast('Entry deleted', 'info');
+        }
+
+        function loadHistory(index) {
+            const h = history[index];
+            ['sepal-length', 'sepal-width', 'petal-length', 'petal-width'].forEach(id => {
+                const el = document.getElementById(id);
+                const num = document.getElementById(id + '-input');
+                const val = h.data[el.id.replace('-', '_')];
+                el.value = val;
+                num.value = val;
+            });
+            historyPop.classList.add('hidden');
+            modal.classList.remove('hidden');
+            toast('Measurements restored', 'info');
+        }
+
+        /* ---------- api ---------- */
+        let API_URL = localStorage.getItem('irisApi') || 'https://iris-fastapi-s2mi.onrender.com';
+        async function fetchAccuracy() {
+            try {
+                const res = await fetch(`${API_URL}/iris_model/accuracy`);
+                const js = await res.json();
+                document.getElementById('apiStatus').innerHTML = `<span class="text-green-500">●</span> ${js.accuracy}`;
+                toast('API connected', 'success');
+            } catch {
+                document.getElementById('apiStatus').innerHTML = `<span class="text-red-500">●</span> offline`;
+                toast('API offline – using defaults', 'error');
+            }
+        }
+        fetchAccuracy();
+
+        /* ---------- predict ---------- */
+        document.getElementById('predictBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('predictBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>Predicting…';
+
+            const payload = {
+                sepal_length: +document.getElementById('sepal-length-input').value,
+                sepal_width:  +document.getElementById('sepal-width-input').value,
+                petal_length: +document.getElementById('petal-length-input').value,
+                petal_width:  +document.getElementById('petal-width-input').value
+            };
+            try {
+                const res = await fetch(`${API_URL}/iris_model/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const js = await res.json();
+                history.push({ prediction: js.prediction, data: payload, date: new Date().toLocaleString() });
+                saveHistory();
+                showResult(js);
+                toast('Prediction complete', 'success');
+            } catch (e) {
+                toast('Prediction failed – ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa fa-sparkles mr-2"></i>Predict';
+            }
+        });
+
+        function showResult({ prediction, probabilities }) {
+            const icons = { 'Iris-setosa':'🌸', 'Iris-versicolor':'🌺', 'Iris-virginica':'🌼' };
+            const colors = { 'Iris-setosa':'bg-pink-500', 'Iris-versicolor':'bg-purple-500', 'Iris-virginica':'bg-blue-500' };
+            let bars = '';
+            for (const [sp, pr] of Object.entries(probabilities)) {
+                bars += `
+                <div class="mb-2">
+                    <div class="flex justify-between text-xs font-semibold"><span>${sp}</span><span>${pr}</span></div>
+                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                        <div class="${colors[sp]} h-full rounded-full" style="width:${pr}"></div>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('resultBody').innerHTML = `
+                <div class="text-center mb-4">
+                    <div class="text-5xl mb-2">${icons[prediction] || '🌺'}</div>
+                    <div class="font-bold text-xl">${prediction}</div>
+                </div>
+                ${bars}
+            `;
+            document.getElementById('resultPop').classList.remove('hidden');
+        }
+
+        document.getElementById('closeResult').onclick = () => {
+            document.getElementById('resultPop').classList.add('hidden');
+        };
+    </script>
+</body>
+</html>
