@@ -2,16 +2,26 @@
     By ANDRIANAIVO Noé L2 - Genie Logiciel at ISTA Ambositra
     Exam AI: IRIS Flower Classification Using Decision Tree Algorithms
     
-    This script defines a FastAPI application for predicting Iris flower classes using a pre-trained Decision Tree model.
+    This script defines a FastAPI application for predicting Iris flower classes using a home made model.
     The API accepts POST requests with sepal and petal measurements and returns the predicted Iris class.
 """
 
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import model as iris_model
 
 # Define API
 app = FastAPI()
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],      # accept requests from all domains
+    allow_credentials=True,
+    allow_methods=["*"],      # all HTTP methods
+    allow_headers=["*"],      # all headers
+)
 
 class IrisInput(BaseModel):
     sepal_length: float = 5.1

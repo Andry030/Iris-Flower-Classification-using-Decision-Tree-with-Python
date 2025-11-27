@@ -28,8 +28,8 @@ console = Console()
 
 # Load the Dataset
 console.print("\n[cyan]📊 Loading Iris dataset...[/cyan]")
-dataset = pd.read_csv("dataset/iris.csv")
 dataset_path = "dataset/iris.csv"
+dataset = pd.read_csv(dataset_path)
 
 # Display dataset info
 def display_dataset_info():
