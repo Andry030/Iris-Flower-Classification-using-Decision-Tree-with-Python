@@ -22,8 +22,6 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich import box
 from rich.tree import Tree
-from rich.layout import Layout
-from rich.columns import Columns
 import time
 
 console = Console()
@@ -117,34 +115,6 @@ with Progress(
 
 console.print("[green]✓ Model training completed successfully![/green]\n")
 
-# Function to predict iris class
-def predict_iris(sepal_length, sepal_width, petal_length, petal_width):
-    try:
-        user_data = pd.DataFrame([{
-            "sepal_length": sepal_length,
-            "sepal_width": sepal_width,
-            "petal_length": petal_length,
-            "petal_width": petal_width
-        }])
-
-        # Prediction
-        prediction = decision_tree.predict(user_data)[0]
-
-        # Probabilities
-        probabilities = decision_tree.predict_proba(user_data)[0]
-        class_probabilities = {cls: f"{prob*100:.2f}%" for cls, prob in zip(decision_tree.classes_, probabilities)}
-
-        # Display results
-        console.print(f"[green]✓ Prediction: {prediction}[/green]")
-        console.print("[blue]Class Probabilities:[/blue]")
-        for cls, prob in class_probabilities.items():
-            console.print(f"  • {cls}: {prob}")
-        return prediction
-
-    except Exception as e:
-        console.print(f"[red]❌ Error in prediction: {e}[/red]")
-        return None
-
 def predict_iris_with_proba(sepal_length, sepal_width, petal_length, petal_width):
     """
     Predict Iris class and return probabilities for each class.
@@ -161,7 +131,6 @@ def predict_iris_with_proba(sepal_length, sepal_width, petal_length, petal_width
     # Probabilités par classe
     probs = decision_tree.predict_proba(user_data)[0]
     class_probabilities = {cls: round(prob * 100, 2) for cls, prob in zip(decision_tree.classes_, probs)}
-    
     return prediction, class_probabilities
 
 def get_accuracy():
@@ -216,7 +185,7 @@ if __name__ == "__main__":
     
     # Header
     header = Panel.fit(
-        "[bold blue]🌸 IRIS FLOWER CLASSIFICATION 🌸[/bold blue]\n"
+        "[bold blue]🌸 WELCOME TO THE IRIS FLOWER CLASSIFICATION 🌸[/bold blue]\n"
         "[bold cyan]Using Decision Tree Algorithms[/bold cyan]\n\n"
         "[dim]By ANDRIANAIVO Noé L2 - Genie Logiciel at ISTA Ambositra[/dim]",
         border_style="blue",

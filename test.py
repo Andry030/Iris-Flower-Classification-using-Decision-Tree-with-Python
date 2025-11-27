@@ -1,5 +1,6 @@
 # By ANDRIANAIVO Noé L2 - Genie Logiciel at ISTA Ambositra
-# This file is a set of tests for the Iris flower classification model.
+# Tests for Iris Flower Classification Model
+
 import model as iris_model
 from rich.console import Console
 from rich.table import Table
@@ -11,6 +12,7 @@ import time
 
 console = Console()
 
+# Function to run automated tests
 def test_predict_iris():
     tests = [
         # Iris-setosa
@@ -55,27 +57,27 @@ def test_predict_iris():
         console=console,
         transient=True
     ) as progress:
-        task = progress.add_task("[cyan]Running tests...", total=len(tests))
+        task = progress.add_task(f"[cyan]Running {len(tests)} tests...", total=len(tests))
         
         for idx, (expected, values) in enumerate(tests, 1):
             sl, sw, pl, pw = values
-            prediction = iris_model.predict_iris(sl, sw, pl, pw)
+            prediction_class, class_probs = iris_model.predict_iris_with_proba(sl, sw, pl, pw)
             
-            if prediction == expected:
-                status = "[green]✓ PASS[/green]"
+            if prediction_class == expected:
+                status = f"[green]✓ PASS[/green]"
                 passed += 1
             else:
-                status = "[red]✗ FAIL[/red]"
+                status = f"[red]✗ FAIL (Predicted: {prediction_class}, Prob: {class_probs[prediction_class]}%)[/red]"
             
             table.add_row(
                 f"#{idx}",
                 expected,
-                prediction,
+                f"{prediction_class} ({class_probs[prediction_class]}%)",
                 status
             )
             
             progress.update(task, advance=1)
-            time.sleep(0.3)  # Slight delay for visual effect
+            time.sleep(1)  # Small delay for visual effect
 
     console.print(table)
     console.print()
@@ -102,6 +104,7 @@ def test_predict_iris():
     ))
     console.print()
 
+# Function for manual prediction
 def enter_manual_data():
     try:
         console.print()
@@ -113,7 +116,6 @@ def enter_manual_data():
         ))
         console.print()
 
-        # Create input table for better visualization
         console.print("[bold cyan]Enter Iris Flower Measurements:[/bold cyan]")
         
         sl = FloatPrompt.ask("  [green]Sepal Length[/green] (cm)", default=5.1)
@@ -143,50 +145,45 @@ def enter_manual_data():
             transient=True
         ) as progress:
             progress.add_task("[cyan]Analyzing measurements...", total=None)
-            time.sleep(0.8)  # Simulate processing
-            prediction = iris_model.predict_iris(sl, sw, pl, pw)
+            time.sleep(0.8)
+            prediction_class, class_probs = iris_model.predict_iris_with_proba(sl, sw, pl, pw)
 
-        if prediction:
-            # Display prediction
-            console.print(Panel(
-                f"[bold yellow]Predicted Class:[/bold yellow] [bold green]{prediction}[/bold green]",
-                border_style="green",
-                box=box.HEAVY
-            ))
-            console.print()
+        # Display prediction with probabilities
+        console.print(Panel(
+            f"[bold yellow]Predicted Class:[/bold yellow] [bold green]{prediction_class}[/bold green]\n"
+            f"[bold cyan]Class Probabilities:[/bold cyan]\n"
+            + "\n".join([f"  • {cls}: {prob}%" for cls, prob in class_probs.items()]),
+            border_style="green",
+            box=box.HEAVY
+        ))
 
-            # Ask for confirmation
-            correct = Confirm.ask("[yellow]Is this prediction correct?[/yellow]", default=True)
+        console.print()
+        correct = Confirm.ask("[yellow]Is this prediction correct?[/yellow]", default=True)
 
-            if not correct:
-                console.print()
-                iris_class = Prompt.ask(
-                    "[cyan]Please enter the correct Iris class[/cyan]",
-                    choices=["Iris-setosa", "Iris-versicolor", "Iris-virginica"]
-                )
-                
-                response = iris_model.save_new_sample(sl, sw, pl, pw, iris_class)
-                if response['status']:
-                    console.print("[green]✓ New sample saved to dataset.[/green]")
-                else:
-                    console.print(f"[red]✗ Error saving sample: {response['message']}[/red]")
+        if not correct:
+            console.print("[bold cyan]Please select the correct Iris class:[/bold cyan]")
+            console.print(" #1  Iris-setosa")
+            console.print(" #2  Iris-versicolor")
+            console.print(" #3  Iris-virginica")
+
+            choice = Prompt.ask("Enter the number of the correct class", choices=["1", "2", "3"])
+            
+            # Map choice to class name
+            iris_class_map = {
+                "1": "Iris-setosa",
+                "2": "Iris-versicolor",
+                "3": "Iris-virginica"
+            }
+            iris_class = iris_class_map[choice]
+
+            response = iris_model.save_new_sample(sl, sw, pl, pw, iris_class)
+            if response['status']:
+                console.print("[green]✓ New sample saved to dataset.[/green]")
             else:
-                console.print("[green]✓ Thank you for confirming.[/green]")
-                console.print()
-
-                save = Confirm.ask("[yellow]Do you want to save this data?[/yellow]", default=False)
-                if save:
-                    response = iris_model.save_new_sample(sl, sw, pl, pw, prediction)
-                    if response.get('status', True):
-                        console.print("[green]✓ New sample saved to dataset.[/green]")
-                    else:
-                        console.print(f"[red]✗ Error: {response.get('message', 'Unknown error')}[/red]")
-
+                console.print(f"[red]✗ Error saving sample: {response['message']}[/red]")
         else:
-            console.print(Panel(
-                "[bold red]❌ Prediction failed.[/bold red]",
-                border_style="red"
-            ))
+            console.print("[green]✓ Thank you for confirming.[/green]")
+
 
     except ValueError as e:
         console.print(Panel(
@@ -199,12 +196,15 @@ def enter_manual_data():
 
 if __name__ == "__main__":
     console.print()
-    console.print(Panel.fit(
-        "[bold blue]🌸 IRIS FLOWER CLASSIFICATION MODEL 🌸[/bold blue]\n"
+    header = Panel.fit(
+        "[bold blue]🌸 WELCOME TO THE IRIS FLOWER CLASSIFICATION TEST SCRIPT 🌸[/bold blue]\n"
+        "[bold cyan]I'm happy to present you the Iris Flower Classification Test Script Using Decision Tree Algorithms[/bold cyan]\n\n"
         "[dim]By ANDRIANAIVO Noé L2 - Genie Logiciel at ISTA Ambositra[/dim]",
         border_style="blue",
-        box=box.DOUBLE_EDGE
-    ))
+        box=box.DOUBLE_EDGE,
+        padding=(1, 2)
+    )
+    console.print(header)
     
     test_predict_iris()
     enter_manual_data()
