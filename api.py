@@ -10,6 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import model as iris_model
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 # Define API
 app = FastAPI()
@@ -29,7 +33,14 @@ class IrisInput(BaseModel):
     petal_length: float = 1.4
     petal_width: float = 0.2
 
-@app.get("/")
+# Set up templates
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/iris_model")
 def read_root():
     return {
         "message": "Welcome to the Iris Flower Classification API!",
