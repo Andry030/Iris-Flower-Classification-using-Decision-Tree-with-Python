@@ -54,13 +54,21 @@ def get_accuracy():
 @app.post("/iris_model/predict")
 def predict_iris(data: IrisInput):
     try:
-        prediction = iris_model.predict_iris(
+
+        if not (0 < data.sepal_length < 10 and 0 < data.sepal_width < 10 and 0 < data.petal_length < 10 and 0 < data.petal_width < 10):
+            raise ValueError("Values out of expected range (0–10 cm).")
+        
+        prediction, probabilities = iris_model.predict_iris_with_proba(
             data.sepal_length,
             data.sepal_width,
             data.petal_length,
             data.petal_width
         )
-        return {"prediction": prediction}
+        
+        return {
+            "prediction": prediction,
+            "probabilities": probabilities
+        }
     
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
