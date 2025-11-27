@@ -14,16 +14,24 @@ import model as iris_model
 app = FastAPI()
 
 class IrisInput(BaseModel):
-    sepal_length: float = 5.1  # valeur par défaut
-    sepal_width: float = 3.5   # valeur par défaut
-    petal_length: float = 1.4  # valeur par défaut
-    petal_width: float = 0.2   # valeur par défaut
+    sepal_length: float = 5.1
+    sepal_width: float = 3.5
+    petal_length: float = 1.4
+    petal_width: float = 0.2
 
 @app.get("/")
 def read_root():
     return {
-        "author": "ANDRIANAIVO Noé L2 - Genie Logiciel at ISTA Ambositra",
         "message": "Welcome to the Iris Flower Classification API!",
+        "author": "ANDRIANAIVO Noé L2 - Genie Logiciel at ISTA Ambositra",
+        "model": "Iris Decision Tree Classifier By ANDRIANAIVO Noé",
+        "detail": 
+            """
+                This project is a machine learning application for classifying Iris flowers into three species (Iris-setosa, Iris-versicolor, Iris-virginica) based on their sepal and petal measurements.
+                It uses a Decision Tree classifier trained on the classic Iris dataset.
+                GitHub Repository: https://github.com/Andry030/Iris-Flower-Classification-using-Decision-Tree-with-Python.git
+                Dataset Source: https://ocw.mit.edu/courses/15-097-prediction-machine-learning-and-statistics-spring-2012/resources/iris/
+            """,
         "endpoint": [
             {
                 "url": "/iris_model/accuracy",
@@ -60,7 +68,10 @@ def read_root():
 @app.get("/iris_model/accuracy")
 def get_accuracy():
     accuracy = iris_model.get_accuracy()
-    return {f"accuracy": f"{accuracy:.2f}%"}
+    return {
+        "model": "Iris Decision Tree Classifier By ANDRIANAIVO Noé",
+        "accuracy": f"{accuracy:.2f}%"
+    }
 
 # Prediction endpoint
 @app.post("/iris_model/predict")
