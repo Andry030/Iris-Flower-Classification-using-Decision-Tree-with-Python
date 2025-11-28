@@ -362,7 +362,7 @@
         }
 
         /* ---------- api ---------- */
-        let API_URL = localStorage.getItem('irisApi') || 'http://localhost:8000';
+        let API_URL = localStorage.getItem('irisApi') || 'https://iris-fastapi-s2mi.onrender.com';
         async function fetchAccuracy(dtoast = true) {
             try {   
                 const res = await fetch(`${API_URL}/iris_model/accuracy`);
