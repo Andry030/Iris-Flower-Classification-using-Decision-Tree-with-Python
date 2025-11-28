@@ -6,7 +6,14 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.prompt import Prompt, Confirm, FloatPrompt
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import (
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    BarColumn,
+    TimeRemainingColumn,
+    MofNCompleteColumn
+)
 from rich import box
 import time
 
@@ -53,31 +60,44 @@ def test_predict_iris():
 
     with Progress(
         SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
+        TextColumn("[bold cyan]{task.description}"),
+        BarColumn(bar_width=None),
+        MofNCompleteColumn(),         # ex: 3/9
+        TimeRemainingColumn(),        # estimation du temps
         console=console,
-        transient=True
+        expand=True
     ) as progress:
-        task = progress.add_task(f"[cyan]Running {len(tests)} tests...", total=len(tests))
-        
+
+        task = progress.add_task(
+            description="Running tests...",
+            total=len(tests)
+        )
+
         for idx, (expected, values) in enumerate(tests, 1):
             sl, sw, pl, pw = values
             prediction_class, class_probs = iris_model.predict_iris_with_proba(sl, sw, pl, pw)
-            
+
+            # Pass/fail
             if prediction_class == expected:
                 status = f"[green]✓ PASS[/green]"
                 passed += 1
             else:
-                status = f"[red]✗ FAIL (Predicted: {prediction_class}, Prob: {class_probs[prediction_class]}%)[/red]"
-            
+                status = (
+                    f"[red]✗ FAIL[/red] "
+                    f"(Predicted: {prediction_class} | {class_probs[prediction_class]}%)"
+                )
+
+            # Add row to table
             table.add_row(
                 f"#{idx}",
                 expected,
                 f"{prediction_class} ({class_probs[prediction_class]}%)",
                 status
             )
-            
+
+            # Avancer la progress bar très smooth  
             progress.update(task, advance=1)
-            time.sleep(1)  # Small delay for visual effect
+            time.sleep(0.3)  # animation propre
 
     console.print(table)
     console.print()

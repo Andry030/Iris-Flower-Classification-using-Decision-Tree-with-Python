@@ -12,7 +12,6 @@ from pydantic import BaseModel
 import model as iris_model
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 # Define API
@@ -26,6 +25,13 @@ app.add_middleware(
     allow_methods=["*"],      # all HTTP methods
     allow_headers=["*"],      # all headers
 )
+
+class IrisSaveInput(BaseModel):
+    sepal_length: float = 5.1
+    sepal_width: float = 3.5
+    petal_length: float = 1.4
+    petal_width: float = 0.2
+    iris_class: str = "Iris-setosa"
 
 class IrisInput(BaseModel):
     sepal_length: float = 5.1
@@ -81,6 +87,11 @@ def read_root():
                     {"name": "petal_width", "type": "float", "required": True},
                     {"name": "iris_class", "type": "string", "required": True}
                 ]
+            },
+            {
+                "url": "/iris_model/train",
+                "method": "POST",
+                "description": "Retrain the model using the entire dataset"
             }
         ]
     }
@@ -128,14 +139,14 @@ def predict_iris(data: IrisInput):
     
 # Save new sample to dataset
 @app.post("/iris_model/save")
-def save_new_sample(data: IrisInput, iris_class: str):
+def save_new_sample(data: IrisSaveInput):
     try:
         response = iris_model.save_new_sample(
             data.sepal_length,
             data.sepal_width,
             data.petal_length,
             data.petal_width,
-            iris_class
+            data.iris_class
         )
         if not response.get("status", False):
             raise HTTPException(status_code=500, detail=response["message"])
@@ -143,7 +154,7 @@ def save_new_sample(data: IrisInput, iris_class: str):
         return {
             "message": response["message"],
             "data": {
-                "class": iris_class,
+                "class": data.iris_class,
                 "sepal_length": data.sepal_length,
                 "sepal_width": data.sepal_width,
                 "petal_length": data.petal_length,
@@ -153,3 +164,21 @@ def save_new_sample(data: IrisInput, iris_class: str):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/iris_model/train")
+def train_model_endpoint():
+    try:
+        result = iris_model.train_or_load_model(force_retrain=True)
+
+        accuracy = result["cv_score"] * 100
+
+        return {
+            "message": "Thank you for your feedback.",
+            "accuracy": f"{accuracy:.2f}%"
+        }
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Training failed: {str(e)}"
+        )
