@@ -1,141 +1,315 @@
-# Iris Flower Classification using Decision Tree
+# 🌸 Iris Flower Classification Using Decision Tree
 
-**Author:** ANDRIANAIVO Noé L2 - Genie Logiciel at ISTA Ambositra
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.122-green?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.7-orange?logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
+[![License](https://img.shields.io/badge/License-MIT-purple)](#license)
 
-## 📖 Overview
+**By:** ANDRIANAIVO Noé – L2 Génie Logiciel – ISTA Ambositra  
+**Exam Project:** AI – Machine Learning with Decision Tree Algorithms
 
-This project is a machine learning application for classifying Iris flowers into three species (Iris-setosa, Iris-versicolor, Iris-virginica) based on their sepal and petal measurements. It uses a Decision Tree classifier trained on the classic Iris dataset.
+---
 
-The project provides multiple ways to interact with the classification model:
-- A **RESTful API** built with FastAPI.
-- A simple **graphical user interface (GUI)** built with Tkinter.
-- A **command-line interface** for testing and manual data entry.
+## 📋 Table of Contents
+
+- [Quick Start](#-quick-start)
+- [Features](#-features)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [API Reference](#-api-reference)
+- [Project Structure](#-project-structure)
+- [Dataset](#-dataset)
+- [Troubleshooting](#-troubleshooting)
+- [Resources](#-resources)
+
+---
+
+## 🚀 Quick Start
+
+Get the app running in **3 steps**:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Andry030/Iris-Flower-Classification-using-Decision-Tree-with-Python.git
+cd Iris-Flower-Classification-using-Decision-Tree-with-Python
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Start the API server
+uvicorn api:app --reload
+```
+
+Then open your browser to **`http://127.0.0.1:8000`** 🎉
+
+---
 
 ## ✨ Features
 
--   **Decision Tree Model**: A trained model for classifying Iris species.
--   **FastAPI REST API**:
-    -   `GET /`: Welcome message and API documentation.
-    -   `GET /iris_model/accuracy`: Get the current accuracy of the model.
-    -   `POST /iris_model/predict`: Predict the Iris species from input data.
-    -   `POST /iris_model/save`: Save a new data sample to the dataset.
--   **Tkinter GUI**: A simple desktop application to predict Iris species.
--   **Testing**: A test suite to verify the model's predictions.
--   **Data Persistence**: New samples can be added to the `iris.csv` dataset.
+| Feature | Description | Access |
+|---------|-------------|--------|
+| 🧠 **Decision Tree Model** | Pre-trained classifier with ~95% accuracy | API & GUI |
+| 🌐 **FastAPI REST API** | RESTful endpoints for predictions & model management | `localhost:8000` |
+| 🎨 **Web Interface** | Modern, interactive dashboard with dark mode | `localhost:8000/` |
+| 💾 **Data Persistence** | Add new samples & auto-retrain the model | API `/save` endpoint |
+| 📊 **Prediction History** | Track all predictions in browser localStorage | Web UI |
+| 🧪 **Test Suite** | Automated tests + manual prediction testing | `python test.py` |
+| 🖥️ **Desktop GUI** | Simple Tkinter interface for quick predictions | `python iris_gui.py` |
+| 📁 **Data Visualization** | Heatmaps & pair plots of the Iris dataset | `stats_charts/` folder |
 
-## 🛠️ Dependencies
-
-The project requires the following Python libraries:
-
--   `fastapi`
--   `uvicorn`
--   `matplotlib`
--   `numpy`
--   `pandas`
--   `scikit-learn`
--   `seaborn`
+---
 
 ## ⚙️ Installation
 
-1.  **Clone the repository:**
-    ```bash
-    git clone git@github.com:Andry030/Iris-Flower-Classification-using-Decision-Tree-with-Python.git
-    cd ClassificationIrisPython
-    ```
+### Prerequisites
 
-2.  **Install the required packages:**
-    ```bash
-    pip install -r requirements.txt
-    pip install fastapi uvicorn
-    ```
+- Python 3.9 or higher
+- pip (Python package manager)
 
-## 📊 Dataset
+### Step-by-Step Setup
 
-The project uses the classic **Iris flower dataset** (`dataset/iris.csv`). It contains 150 samples from each of the three species of Iris flowers.
+**1. Clone the repository:**
+```bash
+git clone https://github.com/Andry030/Iris-Flower-Classification-using-Decision-Tree-with-Python.git
+cd Iris-Flower-Classification-using-Decision-Tree-with-Python
+```
 
-The four attributes of the dataset are:
--   Sepal Length (cm)
--   Sepal Width (cm)
--   Petal Length (cm)
--   Petal Width (cm)
+**2. Create a virtual environment (recommended):**
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-The three classes are:
--   Iris-setosa
--   Iris-versicolor
--   Iris-virginica
+**3. Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
 
-## 📁 File Descriptions
+**Verify installation:**
+```bash
+python -c "import pandas; import sklearn; print('✓ All dependencies installed')"
+```
 
--   `api.py`: Defines the FastAPI application and its endpoints.
--   `iris_gui.py`: Implements the Tkinter-based graphical user interface.
--   `model.py`: Contains the core logic for the Decision Tree model, including training, prediction, and data handling.
--   `test.py`: Includes test functions for the prediction model and a script for manual data entry.
--   `requirements.txt`: Lists the Python dependencies for the project.
--   `dataset/iris.csv`: The dataset used for training and evaluation.
--   `stats_charts/`: Contains data visualizations like heatmaps and pair plots generated from the dataset.
--   `README.md`: This file.
+---
 
-## 🚀 Usage
+## 💻 Usage
 
-You can interact with the Iris classification model in three ways: via the API, the GUI, or the test script.
-
-### 1. Running the API
-
-To start the FastAPI server, run the following command in your terminal:
+### Option 1: Web Interface (Recommended)
 
 ```bash
 uvicorn api:app --reload
 ```
 
-The API will be available at `http://127.0.0.1:8000`. You can access the interactive API documentation (Swagger UI) at `http://127.0.0.1:8000/docs`.
+Then open **`http://127.0.0.1:8000`** in your browser.
 
-#### API Examples with `curl`:
+**Features:**
+- 📌 Drag sliders or type measurements
+- 🎯 Instant predictions with probabilities
+- 📈 View model accuracy
+- 💬 Give feedback to retrain the model
+- 📜 Prediction history
 
--   **Get model accuracy:**
-    ```bash
-    curl -X GET "http://127.0.0.1:8000/iris_model/accuracy"
-    ```
+---
 
--   **Predict an Iris species:**
-    ```bash
-    curl -X POST "http://127.0.0.1:8000/iris_model/predict" \
-    -H "Content-Type: application/json" \
-    -d '{
-      "sepal_length": 5.1,
-      "sepal_width": 3.5,
-      "petal_length": 1.4,
-      "petal_width": 0.2
-    }'
-    ```
+### Option 2: REST API (for developers)
 
--   **Save a new sample:**
-    ```bash
-    curl -X POST "http://127.0.0.1:8000/iris_model/save?iris_class=Iris-setosa" \
-    -H "Content-Type: application/json" \
-    -d '{
-      "sepal_length": 5.1,
-      "sepal_width": 3.5,
-      "petal_length": 1.4,
-      "petal_width": 0.2
-    }'
-    ```
+Start the server:
+```bash
+uvicorn api:app --reload
+```
 
-### 2. Running the GUI
+#### Example Requests:
 
-To launch the graphical user interface, run this command:
+**Get model accuracy:**
+```bash
+curl -X GET "http://127.0.0.1:8000/iris_model/accuracy"
+```
+
+**Predict an Iris species:**
+```bash
+curl -X POST "http://127.0.0.1:8000/iris_model/predict" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sepal_length": 5.1,
+    "sepal_width": 3.5,
+    "petal_length": 1.4,
+    "petal_width": 0.2
+  }'
+```
+
+**Response:**
+```json
+{
+  "prediction": "Iris-setosa",
+  "probabilities": {
+    "Iris-setosa": "98.50%",
+    "Iris-versicolor": "1.50%",
+    "Iris-virginica": "0.00%"
+  }
+}
+```
+
+---
+
+### Option 3: Desktop GUI
 
 ```bash
 python iris_gui.py
 ```
 
-A window will appear where you can enter the flower's measurements and click "Predict Iris Class" to see the result.
+A simple window will open where you can enter measurements and click **"Predict Iris Class"**.
 
-### 3. Running Tests
+---
 
-To run the predefined tests and manually test the model with your own data, execute the test script:
+### Option 4: Command-Line Testing
 
 ```bash
 python test.py
 ```
 
-This will first run a set of automated tests and then prompt you to enter your own measurements for prediction.
+This will:
+1. ✅ Run 9 automated tests on the model
+2. 📊 Display results in a formatted table
+3. 🔬 Prompt you to manually test with your own data
+4. 💾 Optionally save new samples to the dataset
+
+---
+
+## 🔌 API Reference
+
+| Endpoint | Method | Description | Parameters |
+|----------|--------|-------------|-----------|
+| `/` | GET | Home page with web UI | — |
+| `/iris_model` | GET | API documentation & info | — |
+| `/iris_model/accuracy` | GET | Get model accuracy | — |
+| `/iris_model/predict` | POST | Predict Iris class | `sepal_length`, `sepal_width`, `petal_length`, `petal_width` |
+| `/iris_model/save` | POST | Save new sample & retrain | `sepal_length`, `sepal_width`, `petal_length`, `petal_width`, `iris_class` |
+| `/iris_model/train` | POST | Force model retraining | — |
+
+### Interactive API Docs
+
+FastAPI provides auto-generated documentation:
+- **Swagger UI**: `http://127.0.0.1:8000/docs`
+- **ReDoc**: `http://127.0.0.1:8000/redoc`
+
+---
+
+## 📁 Project Structure
+
+```
+.
+├── api.py                          # FastAPI application & endpoints
+├── model.py                        # ML model logic & training
+├── test.py                         # Test suite & manual testing
+├── iris_gui.py                     # Tkinter desktop GUI
+├── requirements.txt                # Python dependencies
+├── render.yaml                     # Render deployment config
+├── README.md                       # This file
+├── dataset/
+│   └── iris.csv                   # Iris dataset (150 samples)
+├── models/
+│   └── iris_decision_tree.joblib  # Trained model (auto-generated)
+├── templates/
+│   └── index.html                 # Web UI frontend
+└── stats_charts/                  # Data visualizations (optional)
+```
+
+---
+
+## 📊 Dataset
+
+The **Iris Flower Dataset** contains 150 samples from 3 species:
+
+| Attribute | Range | Unit |
+|-----------|-------|------|
+| Sepal Length | 4.3 – 7.9 | cm |
+| Sepal Width | 2.0 – 4.4 | cm |
+| Petal Length | 1.0 – 6.9 | cm |
+| Petal Width | 0.1 – 2.5 | cm |
+
+**Classes:**
+- 🌸 **Iris-setosa** (50 samples)
+- 🌺 **Iris-versicolor** (50 samples)
+- 🌼 **Iris-virginica** (50 samples)
+
+**Original source:** [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/iris)
+
+---
+
+## 🤖 Model Details
+
+- **Algorithm:** Decision Tree Classifier
+- **Training Size:** 80% (120 samples)
+- **Test Size:** 20% (30 samples)
+- **Validation:** 10-Fold Stratified Cross-Validation
+- **Min Samples per Leaf:** 5
+- **Accuracy:** ~95% ✓
+
+---
+
+## 🐛 Troubleshooting
+
+### ❌ "ModuleNotFoundError: No module named 'fastapi'"
+
+**Solution:** Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### ❌ "Port 8000 is already in use"
+
+**Solution:** Use a different port
+```bash
+uvicorn api:app --reload --port 8001
+```
+
+### ❌ API returns "offline"
+
+**Solution:** Make sure the server is running in another terminal
+```bash
+uvicorn api:app --reload
+```
+
+### ❌ "ValueError: Values out of expected range"
+
+**Solution:** Ensure measurements are between 0–10 cm. Example valid input:
+- Sepal Length: 5.1
+- Sepal Width: 3.5
+- Petal Length: 1.4
+- Petal Width: 0.2
+
+---
+
+## 📚 Resources
+
+- **GitHub:** [Iris Classification Project](https://github.com/Andry030/Iris-Flower-Classification-using-Decision-Tree-with-Python)
+- **Dataset Source:** [MIT OpenCourseWare - Iris Dataset](https://ocw.mit.edu/courses/15-097-prediction-machine-learning-and-statistics-spring-2012/resources/iris/)
+- **Learning Resources:
+  - [Medium: Iris Classification using ML](https://medium.com/@markedwards.mba1/iris-flower-classification-using-ml-in-python-8d3c443bc319)
+  - [OpenClassrooms: Machine Learning Basics](https://openclassrooms.com/fr/courses/8063076-initiez-vous-au-machine-learning)
+  - [Scikit-learn Documentation](https://scikit-learn.org/)
+  - [FastAPI Documentation](https://fastapi.tiangolo.com/)
+
+---
+
+## 📝 License
+
+This project is provided for educational purposes. Feel free to use and modify it.
+
+---
+
+## 👨‍💼 Author
+
+**ANDRIANAIVO Noé**  
+L2 Génie Logiciel  
+ISTA Ambositra
+
+---
+
+<div align="center">
+
+**Made with ❤️ for Machine Learning Education**
+
+⭐ If you found this helpful, please star the repository!
+
+</div>
