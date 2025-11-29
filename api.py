@@ -149,10 +149,13 @@ def save_new_sample(data: IrisSaveInput):
             data.iris_class
         )
         if not response.get("status", False):
-            raise HTTPException(status_code=500, detail=response["message"])
+            raise HTTPException(status_code=400, detail=response["message"])
         
+        # Success response (duplicate or new)
+        is_duplicate = response.get("duplicate", False)
         return {
             "message": response["message"],
+            "duplicate": is_duplicate,
             "data": {
                 "class": data.iris_class,
                 "sepal_length": data.sepal_length,

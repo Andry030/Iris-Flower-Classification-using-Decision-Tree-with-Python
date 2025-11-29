@@ -154,9 +154,11 @@ def save_new_sample(sl, sw, pl, pw, iris_class):
     ).any()
 
     if exists:
+        # Silently return success – no action needed
         return {
-            "status": False,
-            "message": "This sample already exists in the dataset."
+            "status": True,
+            "message": "Sample already in dataset",
+            "duplicate": True
         }
 
     # Build new row
@@ -173,7 +175,8 @@ def save_new_sample(sl, sw, pl, pw, iris_class):
 
     return {
         "status": True,
-        "message": "Thank your for your feedback."
+        "message": "Thank you for your feedback.",
+        "duplicate": False
     }
 
 if __name__ == "__main__":

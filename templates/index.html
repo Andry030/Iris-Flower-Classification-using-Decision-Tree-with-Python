@@ -456,7 +456,7 @@
 
         document.getElementById('closeResult').onclick = () => {
             document.getElementById('resultPop').classList.add('hidden');
-            fetchAccuracy()
+            fetchAccuracy(dtoast=false)
         };
 
         let lastPayload = {};
@@ -498,9 +498,15 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                if (!res.ok) throw new Error(`Server responded with ${res.status}`);
                 const js = await res.json();
-                // toast(js.message, 'success');
+                if (!res.ok) throw new Error(js.detail || `Server error: ${res.status}`);
+                
+                // Handle duplicate silently or with subtle message
+                if (js.duplicate) {
+                    toast('Sample already in dataset', 'info');
+                } else {
+                    toast('Sample saved & model updated', 'success');
+                }
             } catch (e) {
                 toast('Failed to save sample: ' + e.message, 'error');
             }
@@ -522,14 +528,15 @@
                     body: JSON.stringify(payload)
                 });
 
-                const js = await res.json();  // parse JSON even if status != 200
+                const js = await res.json();
 
                 if (!res.ok) {
-                    // Use the `detail` field sent by FastAPI
                     throw new Error(js.detail || `Server responded with ${res.status}`);
                 }
 
-                toast(js.message, 'success');
+                if (!js.duplicate) {
+                    toast(js.message, 'success');
+                }
 
             } catch (e) {
                 toast(e.message, 'error');
