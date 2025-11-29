@@ -179,6 +179,57 @@ def save_new_sample(sl, sw, pl, pw, iris_class):
         "duplicate": False
     }
 
+def record_positive_feedback(sl, sw, pl, pw, iris_class):
+    """
+    User confirmed the prediction was correct.
+    Add this as a confident training sample and retrain the model.
+    Returns dict with status and message.
+    """
+    try:
+        df = pd.read_csv(DATASET_PATH)
+
+        # Check if exact sample already exists
+        exists = (
+            (df["sepal_length"] == sl) &
+            (df["sepal_width"] == sw) &
+            (df["petal_length"] == pl) &
+            (df["petal_width"] == pw) &
+            (df["class"] == iris_class)
+        ).any()
+
+        if exists:
+            # Sample already in training set
+            return {
+                "status": True,
+                "message": "Sample already in training set",
+                "trained": False
+            }
+
+        # Add as new training sample
+        new_row = pd.DataFrame([{
+            "sepal_length": sl,
+            "sepal_width": sw,
+            "petal_length": pl,
+            "petal_width": pw,
+            "class": iris_class
+        }])
+
+        retrain_with_new_data(new_row)
+
+        return {
+            "status": True,
+            "message": "✓ Model learned from your confirmation!",
+            "trained": True
+        }
+
+    except Exception as e:
+        console.print(f"[red]❌ Feedback recording failed: {e}[/red]")
+        return {
+            "status": False,
+            "message": f"Failed to record feedback: {str(e)}",
+            "trained": False
+        }
+
 if __name__ == "__main__":
     console.clear()
     header = Panel.fit(

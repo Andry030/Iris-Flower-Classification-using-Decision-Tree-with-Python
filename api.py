@@ -185,3 +185,36 @@ def train_model_endpoint():
             status_code=500,
             detail=f"Training failed: {str(e)}"
         )
+
+@app.post("/iris_model/feedback")
+def record_feedback(data: IrisSaveInput):
+    """
+    Record positive feedback from user confirmation.
+    User confirmed the prediction was correct, so add it as training data.
+    """
+    try:
+        response = iris_model.record_positive_feedback(
+            data.sepal_length,
+            data.sepal_width,
+            data.petal_length,
+            data.petal_width,
+            data.iris_class
+        )
+
+        if not response.get("status", False):
+            raise HTTPException(status_code=500, detail=response["message"])
+
+        return {
+            "message": response["message"],
+            "trained": response.get("trained", False),
+            "data": {
+                "class": data.iris_class,
+                "sepal_length": data.sepal_length,
+                "sepal_width": data.sepal_width,
+                "petal_length": data.petal_length,
+                "petal_width": data.petal_width,
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

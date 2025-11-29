@@ -436,7 +436,7 @@
             document.getElementById('yesBtn').onclick = () => {
                 feedbackSection.classList.add('hidden');
                 document.getElementById('resultPop').classList.add('hidden');
-                addNewSample(prediction);
+                recordPositiveFeedback(prediction);
                 fetchAccuracy(dtoast=false)
             };
             document.getElementById('noBtn').onclick = () => {
@@ -489,6 +489,40 @@
                 btn.innerHTML = '<i class="fas fa-brain mr-2"></i>Predict';
             }
         });
+
+        async function recordPositiveFeedback(iris_class) {
+            const payload = {
+                iris_class,
+                sepal_length: +document.getElementById('sepal-length-input').value,
+                sepal_width:  +document.getElementById('sepal-width-input').value,
+                petal_length: +document.getElementById('petal-length-input').value,
+                petal_width:  +document.getElementById('petal-width-input').value
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/iris_model/feedback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const js = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(js.detail || `Server responded with ${res.status}`);
+                }
+
+                // Show appropriate message based on whether model was trained
+                if (js.trained) {
+                    toast('✓ Model improved with your feedback!', 'success');
+                } else {
+                    toast('✓ Thank you for confirming!', 'success');
+                }
+
+            } catch (e) {
+                toast('Feedback sent but not processed: ' + e.message, 'info');
+            }
+        }
 
         async function saveSample(irisClass) {
             const payload = { ...lastPayload, iris_class: irisClass };
